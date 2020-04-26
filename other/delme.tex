@@ -1,0 +1,86 @@
+\section{Main contributions of current research}
+The main  advances presented here compared with existing methods are:
+\begin{itemize}
+\item Using the sum of tags of first and second neighbors on the trainning set as input to GCN in absence of external information
+\item Combination of directed label propagation, topology and external information in one coherent framework.
+\item Combination of this framework into a recurrent network formalism to handle evolving graphs, and showing it outperforms static approaches. 
+\end{itemize}
+\section{Model and data description}
+Our main goal was to predict whether companies would coallapse or actually be in the top 5 \% gain of the year, using both ranking information and a network similarity product. Jing Fang et al (REF) introcud this network and the task, and we follow them by integrating their task into a GCN formalism for each year, and testing whether combing GCNs from multiple years under one combined LSTM outperforms a GCN for each time point (TP).
+
+The advantage of such a formalism is the possibility to use information from previous years to imrprove the accuracy. Another advantage is the production of a single GCN for all years leading to a simpler interpretation of the results. We show here that the propsoed approach does improve the average accuracy, but it does so by increasing the accuracy in low accuracy TP and reducing the accuracy in originally high accuracy TP. 
+
+Formally our model is as follows, Given a set of TP :$TP=1 \to k$ and for each time point we are given an undirected graph represented by an adjacency matrix $A^k$, a label for each node $i$ in the graph $Y(i)^k$ and possibely some external input on each node $\vec{x}(i)^k$. We use a GCN $H^k$ to classify the labels using either only the graph topology or a combination of the graph topology and the external input. We test multiple methods to rerpresent the graph topology and test the resulting accuracy. We then test wether using the GCN output as input to a LSTM and learning the labels using the LSTM produces a higher accuracy, Formally, we tested 4 configurations 
+
+We have tested four configurations:
+
+\begin{itemize}
+\item	Pure GCN  model on each year – yielding $n$ models - one for each snapshot (year) to predict the outcome in the following snapshot.
+\item	Pure GCN model trained on all years simultaneously – yielding a single model, compatible for all snapshots.
+\item	Two phases models, where  we first train the single model learned (as above), and then we use its one before last layer as the input to  a RNN.
+\item 	A combined model  where the signle GCN and RNN  are trained simultaneously.
+\end{itemize}
+\subsection {Different static model for each year}
+We extended the GCN model developed by Thomas Kipf et al. (Kipf and Welling 2016). Each GCN layer is defined as 
+$$X_{n+1}=\sigma(A*X_n*W_n ),$$
+where$ A$ is the adjacency matrix, $X$  is the input from the previous layer, and $W$ are the weights of the current layer.  The activation function for intermediate layers was the ReLu function, and the last layer was linear. Dropout rates of $40 \%$, and L2 regularization with a weight of 0.001 were used. The models were trained for 200 epochs and used a Negative Log Likelihood loss on a weighted distribution of classes (to correct the imbalance distribution of labels) and an Adam optimizer. The main extenstion is the usage of topology or neiighbors tags as as input to the nodes.In the absence of any external information on the nodes, we propose to use one of the two possible inputs: A) Caracterize each node by a vector of topological attributes (REF), and use this vector as an input, B) Compute the number of neighbors and second neighbors that have a given tag and use this as an input. This creates a vector of the twice the number of possible tags for each node. When external information is available we introduce the external information and topological information to distinct input layers and then combine the input layers through a GCN layer (Figure 1). 
+
+%The extension comes through the incorporation of an asymmetric adjacency matrix. In this model we do not lose the direction of the graph, which contains topological information. We incorporate the direction by taking the adjacency matrix (asymmetric in directed graph) and concatenate its transpose to it – creating a$ 2n x n$ adjacency matrix. The dimension of the output of each layer is: $[(2NxN)*(Nxi_n )*(i_n xo_n )]=2Nxo_n$., which in turn is passed to the next layer following a rearrangement of the output by splitting and concatenating it to change dimensions from  - $2NxO_n$  to $ Nx2O_n$. 
+
+%At first, we wanted to asses our data on the base model (MultiLayerGCN and CombinedGCN). In this stage, we performed complete learning of the base model on each of the snapshots, independently of each other. Both these base models support directed graphs and undirected graphs using a symmetric or an asymmetric version correspondingly.
+
+\subsection{Combined static model for all the years}
+We used the two basic models above (with and without external information) and trained each of them on all snapshots simultaneously. Unlike the previous stage, the process yields two  unified models which are learned and tested over all the snapshots together. The models were trained for 200 epochs and used a Negative Log Likelihood loss on a weighted distribution of classes (to correct the imbalance distribution of labels) and an Adam optimizer.
+\subsection{ Two-phase model – with separate GCN and RNN}
+Here we introduce the RNN element which handles the dynamic part of the data.
+First, we trained the unified model for all the years as above.  This unified model still represents a static approach for the classification. After we trained the static part of the model, we trained the RNN. The input for the RNN layer is the output of the layer before the last of the static model.  To do so, we forward propagated each year through the static part of the model, and aggregated the output for the RNN part, so that the input of the second phase is of dimensions $[N_{seq} * N_{nodes} * O_{l-1}]$ where $N_{seq}=17$ – the sequence length (number of snapshots), $N_nodes$– the number of nodes in the complete unified graph, and $O_{l-1)}=20$, the chosen size of the layer before the last in the static part.
+This model was trained as described above, and the RNN was trained using a cross-entropy loss with quadratic loss function – LBFGS.
+\subsection{Fully combined model}
+If in the previous stage we trained two models (static and dynamic) one after the other while passing the output from the one trained model as an input to train the other model. Here, we built a single model to handle both through a combined back propagation. Each snapshot is propagated through the GCN with a slight difference that the last layer is longer than the number of classes – in the size of the layer before the last (as described in stage 3). The output goes through the RNN layers along with the RNN internal sate, which is initialized with zeros for each node, and the RNN output a vector of the size of classes for each node in each snapshot, which was compated  to  a log-softmax function. We used the Negative Log Likelihood loss function, and like stage 3, we also used the LBFGS optimizer. 
+\subsection{Networks studied}
+YORAM FILL
+For ease of use, all graphs in time must contain the same nodes (different edges), so we need to “pad” each graph with the missing nodes. At first, we checked how many nodes are changing along with the various graphs – added and removed nodes.
+We collect all the nodes of all the graphs of the different snapshots (identified by their IDs), and for each graph, we add the missing nodes from the collected group (without any labeling).
+The split of the nodes occurs once at the beginning on the entire set of nodes, and for each graph, the train-Val-test are taken from this split. The train set is an intersection of the train part of the split and the labeled nodes.
+
+\section{Comparison of performances}
+\subsection{Types of input}
+When testing a topological input, we followed the Network Attribute Vector approach of (REF) and used the following topological features of each node: Attractor basin (REF),  Average neighbor degree, Betweenness centrality,  The first two moments of the distance distribution of each node to all other nodes,  Closeness centrality (REF), Eccentricity (REF), Fiedler vector (REF),  Flow meaure (REF),  K Core (REF), Load centrality (REF), Page Rank (REF), and the frequency of small scale motifs surrounding each node (REF).
+For stage 1 I ran 4 input scenarios:
+•	Combined topological features with inner content
+•	Combined topological features without inner content
+•	Neighbors topological data with inner content
+•	Neighbors topological data without inner content
+As observed before, the best results came from the combination of topological features (all, including the neighbors, excluding motif4), with the inner data.
+If we exclude the inner data, the neighbor's input achieved better than the combination of neighbors with topological features.
+
+\subsection{GCN-LSTM configration}
+IDAN PLEASE HERE FIX THE INPUT (I SUPPOSE NEIGHBORS AND EXTERNAL INPUT) AND COMPARE THE 4 MODELS
+\subsection{Combined model}
+HERE PLEASE CHECK A MODEL WHERE YOU DECIDE BASED ON THE TRAIN AUC WHETHER TO USE THE FULL MODEL OR WHEHTER TO USE A SINGLE YEAR MODEL
+\section{Summary}
+We have here shown that the future of companies can be predicted from their interaction networks, even in the absence of any other financial information. Previous works have shown that the topological information of this network combined with label propagation can be used to predict the future success or collapse of a network. We have here shown that using GCN outperforms exising methods, as has been shown in many other graph machine learning domains (REF). In the presence of multiple graphs, a single GCN is slightly worse than a GCN for each graph, probably since the rlation between the graph and the companies success changes over time. However, when the same combined network is solved using a LSTM RNN, the performance is actually increased, suggesting that while the dynamics of companies may change over time, the change is slow enough to allow information from previous years to actually improve on the acuracy of future years. The current formalism can be extended to any multi-network classification tasks, where the networks and tags change slowly enough.
+
+\section*{References}
+
+References follow the acknowledgments. Use unnumbered first-level heading for
+the references. Any choice of citation style is acceptable as long as you are
+consistent. It is permissible to reduce the font size to \verb+small+ (9 point)
+when listing the references. {\bf Remember that you can use more than eight
+  pages as long as the additional pages contain \emph{only} cited references.}
+\medskip
+
+\small
+
+[1] Alexander, J.A.\ \& Mozer, M.C.\ (1995) Template-based algorithms for
+connectionist rule extraction. In G.\ Tesauro, D.S.\ Touretzky and T.K.\ Leen
+(eds.), {\it Advances in Neural Information Processing Systems 7},
+pp.\ 609--616. Cambridge, MA: MIT Press.
+
+[2] Bower, J.M.\ \& Beeman, D.\ (1995) {\it The Book of GENESIS: Exploring
+  Realistic Neural Models with the GEneral NEural SImulation System.}  New York:
+TELOS/Springer--Verlag.
+
+[3] Hasselmo, M.E., Schnell, E.\ \& Barkai, E.\ (1995) Dynamics of learning and
+recall at excitatory recurrent synapses and cholinergic modulation in rat
+hippocampal region CA3. {\it Journal of Neuroscience} {\bf 15}(7):5249-5262.

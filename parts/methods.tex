@@ -1,0 +1,38 @@
+\section{Methods}
+
+\subsection*{Networks measures}
+Our goal is to use the graph structure to classify node colors. Hence, we compute features that are only based on the graph structure, ignoring any external content associated with each node. Those features are used to convert nodes into the appropriate network attribute vector (NAV) \cite{naaman2019edge}. Following is a list of attributes used. Note that other attributes may have been used with probably similar results.
+\begin{itemize}
+\item   \textbf{Degree}: The first and easiest feature is the number of in \& out (in case of directed graphs) edges. 
+\item   \textbf{Betweenness Centrality}: \cite{everett1999centrality}. Betweenness is a centrality measure of a vertex. It is defined by the numbers of shortest paths from all vertices that pass through the vertex. Formally: $g(v)=\sum_{s\neq v\neq t}\frac{\sigma_{st}(v)}{\sigma_{st}}$, where $\sigma_{st}$ is the total number of shortest paths from vertex $s$ to vertex $t$ and $\sigma_{st}(v)$ is the number of paths that pass-through vertex $v$. 
+\item   \textbf{Closeness Centrality}: Closeness is a centrality measure of a vertex. It is defined as the average length of the shortest path between the vertex and all other vertices in the graph.
+\item   \textbf{Distance distribution}: We compute the distribution of distances from each node to all other nodes using a Dijkstra algorithm \cite{dijkstra1959note}, and then use the first and second moments of this distribution. 
+\item   \textbf{Flow \cite{rosen2014directionality}}: we define the flow measure of a node as the ratio between the undirected and directed distances between the node and all other nodes. Formally:
+$$F(u)=\frac{1}{|B(u)|}\sum_{v\in V}\frac{\overleftrightarrow{d(u, v)}}{\overrightarrow{d(u, v)}}\delta(u)$$
+\\where $\overrightarrow{d(u,v)}$ is the shortest path distance from $u$ to $v$ in a directed graph, and $\overleftrightarrow{d(u,v)}$ is the shortest path distance from $u$ to $v$ in the undirected graph. $|B(u)|$ is the number of the vertices that can be reached in and out from vertex $u$ in any distance. The binary $\delta$-function deals with the case of a small isolated group of vertices.
+$$
+\delta(u)=
+\begin{cases}
+1,& \frac{|B(u)|}{max\{|B(v)|\}_{v\in V}} > \text{threshold} \\
+0,& \text{otherwise}
+\end{cases}  
+$$
+\item   \textbf{Attraction \cite{muchnik2007self}}: Attraction Basin hierarchy is the comparison between the weighted fraction of the network that can be reached from each vertex with the weighted fraction of the network from which the vertex can be reached. Formally:
+$$A(i)=\left(\sum_{m}\frac{N_{-m}(i)}{<N_{-m}>}\alpha^{-m}\right) \Bigg/ \left(\sum_{m}\frac{N_{m}(i)}{<N_{m}>}\alpha^{-m}\right)$$
+\\ where $N_{-m}(i)$ is the number of the vertices from which the vertex $i$ can be reached in $m$ directional edges and $<N_{-m}>$ is the average $N_{-m}(i)$ for all vertices $i$ in the graph. The weigh $t\alpha^{-m}$ is introduced to balance the influence of the immediate and remote circles.
+\item   \textbf{Motifs}: Network motifs are small connected sub-graphs. We use an extension of the Itzchack algorithm \cite{itzhack2007optimal} to calculate motifs. For each node, we compute the frequency of each motif where this node participates. 
+\item   \textbf{K-cores \cite{batagelj2003m}}:  A K-core is a maximal subgraph that contains vertices of degree $k$ or more. Equivalently, it is the subgraph of G formed by repeatedly deleting all nodes of degree less than $k$.
+\item   \textbf{Louvain community detection algorithm \cite{blondel2008fast}}: The Louvain algorithm is a community detection algorithm. The algorithm works by optimization of modularity, which has scale value between -1 to 1. Formally, modularity is:
+$Q=\frac{1}{2m}\sum_{ij}\left[A_{ij}-\frac{k_{i}k_{j}}{2m}\right]\delta(c_{i},c_{j})$
+\\ where $A_{ij}$ represents the weight of the edge between $i$ and $j$,  $k_{i}=\sum_{j}A_{ij}$ is the sum of the weights of the edges attached to vertex $i$,  $c_{i}$ is the community to which vertex {i} is assigned, the $\delta$-function:
+$
+\delta(u)=
+\begin{cases}
+1,& u=v\\
+0,& \text{otherwise}
+\end{cases}  
+$ and $m=\frac{1}{2}\sum_{ij}A_{ij}$
+\end{itemize}
+
+\subsection*{Datasets studied}
+We studied two citation networks – Cora and Citeseer \cite{giles1998citeseer}. Citation graph’s nodes are documents containing textual data, and the edges are citation links. The documents are split into several categories (classes) which we aim to predict. We analyzed two versions of these datasets which produced slightly different results. Either using the full graph which in both datasets is not connected or using the largest connected subgraph (see Table \ref{tab:dataset} for the size of full and connected networks). In the main text, we report the Cora results. The CiteSeer results are similar.

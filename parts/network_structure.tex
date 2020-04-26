@@ -1,0 +1,17 @@
+\section{Network structure}
+We compared the following two models of a GCN:
+\begin{itemize}
+\item   \textbf{Multi-layer GCN}: We extended the GCN model developed by Thomas Kipf et al. \cite{thomas2016semi}. Each GCN layer is defined as $X_{n+1}=\sigma(A\cdot X_{n}\cdot W_{n})$, where $A$ is the adjacency matrix, $X$ is the input from the previous layer, and $W$ are the weights of the current layer.  The extension comes through the incorporation of an asymmetric adjacency matrix. In this model we do not lose the direction of the graph, which contains topological information. We incorporate the direction by taking the adjacency matrix (asymmetric in a directed graph) and concatenate its transpose to it – creating a $2n x n$ adjacency matrix. The dimension of the output of each layer is: $[(2N x N)\cdot (N x i_{n})\cdot (i_{n} x o_{n})]=2N x o_{n}$, which in turn is passed to the next layer following a rearrangement of the output by splitting and concatenating it to change dimensions from - $2N x O_{n}$ to $N x 2O_{n}$. The activation function for intermediate layers was the ReLu function, and the last layer was linear. Dropout rates of 40\% and $L_{2}$ regularization with a weight of 0.001 were used.
+\item   \textbf{Combined GCN}: This model includes information from 3 sources:  The adjacency matrix, the topological feature matrix, an external features matrix (in the Cora \& Citeseer case, the bag-of-words features). As was the case above, the adjacency matrix is $\tilde{A}=A|A^{T}$, hence of dimensions: $2n x n$. First, we pass the data matrix to a GCN-activation-dropout process, which leads to a $2n x L_{1}$ output after the dropout. The two inputs (topology and external features) are then concatenated following a rearrangement of the processed data matrix by splitting in dimension 0 and concatenating in the dimension $1–2n x L_{1}\rightarrow n x 2L_{1}$. Following the concatenation, an $n x (2L_{1}+T)$ matrix is obtained, which is passed forward to the Asymmetric GCN layers. The following layers are as above in the asymmetric GCN (see Fig \ref{fig:models} for comparison).
+\end{itemize}
+
+\subsection*{Feed Forward Network}
+The results in Figure \ref{fig:acc_per} are produced through a feed-forward network with two internal layers of sizes 300 and 100 internal nodes and an output layer with the number of possible classifications (7 and 6 in CiteSeer and Cora, respectively). The nonlinearities were Relu’s in the internal layers and a linear function in the output layer. An $L_{2}$ regularization of 0.2 was used for all layers and a 10\% drop in our rate.  The loss function was a categorical cross-entropy as implemented in Keras with a TensorFlow backend.
+
+\subsection*{Code}
+The following links are the code parts to the graph-measures’ calculations and the learning:
+\\ \textbf{Topological GCN}:	\url{github.com/louzounlab/graph-ml/tree/master/gcn}
+\\ \textbf{Graph measure}: 	\url{github.com/louzounlab/graph-measures}
+
+\subsection*{Statistical evaluation}
+The precision of the results was estimated through their accuracy, and the standard deviation of the accuracy was computed using 10 random training and test splits of the data. Methods were then compared using a non-parametric Mann-Whitney test.

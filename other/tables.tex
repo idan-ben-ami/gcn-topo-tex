@@ -1,0 +1,55 @@
+\subsection*{Tables}
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{||c c||} 
+        \hline
+        \textbf{All Features} & \textbf{Neighbors} \\ [0.5ex] 
+        \hline\hline
+        attractor basin	& first neighbors \\
+        \hline
+        average neighbor degree	& second neighbors \\
+        \hline
+        betweenness centrality & \\
+        \hline
+        BFS moments & \\
+        \hline
+        closeness centrality & \\
+        \hline
+        eccentricity & \\
+        \hline
+        fiedler vector & \\
+        \hline
+        flow & \\
+        \hline
+        general & \\
+        \hline
+        K-core & \\
+        \hline
+        load centrality & \\
+        \hline
+        louvain & \\
+        \hline
+        motif3 & \\
+        \hline
+        motif4 & \\
+        \hline
+        page rank & \\ [1ex]
+        \hline
+    \end{tabular}
+    \caption{\textit{List of features used. The first column depicts the list of features used for the topology. The second column is the list of features used when only neighbor information was used. Both types are described in detail in Methods.}}
+    \label{tab:features}
+\end{table}
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{*}{\textbf{Dataset}} & \multicolumn{2}{c|}{\textbf{All Graphs}} & \multicolumn{2}{c|}{\textbf{Max Connected subgraph}} & \multirow{2}{*}{\textbf{Classes}} \\ \cline{2-5}
+                                        & \textbf{Nodes}      & \textbf{Edges}     & \textbf{Nodes}            & \textbf{Edges}           &                                   \\ \hline
+        \textit{"Cora"}                   & 2708                & 5429               & 2485                      & 5209                     & 7                                 \\ \hline
+        \textit{"Citeseer"}               & 3311                & 4703               & 2108                      & 3745                     & 6                                 \\ \hline
+    \end{tabular}
+    \caption{\textit{Node and edge number in networks studied in either the entire network or only in the maximally connected component.}}
+    \label{tab:dataset}
+\end{table}
